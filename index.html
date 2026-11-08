@@ -10,7 +10,7 @@
 <body class="bg-[#121214] text-white font-sans p-4 select-none">
 
     <div class="max-w-md mx-auto">
-        <!-- Скрытые или встроенные API ключи (подставлены автоматически) -->
+        <!-- Блок API статуса -->
         <div class="bg-[#1a1a1e] p-3 rounded-xl mb-4 border border-gray-800 text-xs flex justify-between items-center">
             <div>
                 <span class="font-bold text-emerald-400">⚡ MEXC Futures API Connected</span>
@@ -89,7 +89,6 @@
         let currentName = "SOL/USDT";
         let currentFlag = "🟣";
 
-        // Вшитые ключи для авторизованных запросов к MEXC Futures API
         const MEXC_API_KEY = "mx0vgl7oB0mYXD4zyh";
         const MEXC_SECRET_KEY = "c280a043e4fe4952a88b7f25be20d130";
 
@@ -105,7 +104,7 @@
             toggleModal();
         }
 
-        // 1. Анализ выбранного ФЬЮЧЕРСА (срабатывает мгновенно по клику)
+        // 1. Анализ выбранного ФЬЮЧЕРСА через обход CORS
         async function fetchFuturesSignal() {
             const btn = document.getElementById('gen-btn');
             const dirElement = document.getElementById('signal-direction');
@@ -121,8 +120,10 @@
             dirElement.innerText = `Анализ фьючерса ${currentName}...`;
 
             try {
-                let res = await fetch(`https://contract.mexc.com/api/v1/contract/ticker?symbol=${currentSymbol}`);
-                let json = await res.json();
+                let targetUrl = `https://contract.mexc.com/api/v1/contract/ticker?symbol=${currentSymbol}`;
+                let res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl));
+                let wrapper = await res.json();
+                let json = JSON.parse(wrapper.contents);
                 
                 if(!json.success) throw new Error("Ошибка API");
                 let data = json.data;
@@ -167,7 +168,7 @@
             }
         }
 
-        // 2. Сканер диких фьючерсных монет
+        // 2. Сканер диких фьючерсных монет через обход CORS
         async function scanFuturesWild() {
             const btn = document.getElementById('scan-btn');
             const dirElement = document.getElementById('signal-direction');
@@ -183,8 +184,10 @@
             dirElement.innerText = "Поиск диких фьючерсных пар...";
 
             try {
-                let res = await fetch('https://contract.mexc.com/api/v1/contract/ticker');
-                let json = await res.json();
+                let targetUrl = 'https://contract.mexc.com/api/v1/contract/ticker';
+                let res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl));
+                let wrapper = await res.json();
+                let json = JSON.parse(wrapper.contents);
                 
                 if(!json.success) throw new Error("Ошибка API");
                 let allFutures = json.data;
