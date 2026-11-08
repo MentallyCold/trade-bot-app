@@ -93,12 +93,21 @@
             document.getElementById('modal').classList.toggle('hidden');
         }
 
+        // Ручной выбор монеты (открывает и закрывает модалку)
         function selectPair(symbol, name, flag) {
             currentSymbol = symbol;
             currentName = name;
             currentFlag = flag;
             document.getElementById('selected-pair').innerHTML = `<span>${flag} ${name} (Futures)</span><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
             toggleModal();
+        }
+
+        // Тихое обновление монеты сканером (без открытия модалки)
+        function setScannedPair(symbol, name, flag) {
+            currentSymbol = symbol;
+            currentName = name;
+            currentFlag = flag;
+            document.getElementById('selected-pair').innerHTML = `<span>${flag} ${name} (Futures)</span><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
         }
 
         // 1. Анализ текущего фьючерса
@@ -160,7 +169,7 @@
             }
         }
 
-        // 2. Сканер топовых волатильных фьючерсных монет
+        // 2. Сканер топовых волатильных фьючерсных монет (без открытия модалки)
         async function scanFuturesWild() {
             const btn = document.getElementById('scan-btn');
             const dirElement = document.getElementById('signal-direction');
@@ -187,7 +196,8 @@
                 let price = parseFloat(hotContract.lastPrice);
                 let change = parseFloat(hotContract.priceChangePercent);
 
-                selectPair(hotContract.symbol, coinName, "🔥");
+                // Используем функцию без вызова модального окна
+                setScannedPair(hotContract.symbol, coinName, "🔥");
 
                 let stopLoss = change < 0 ? price * 0.96 : price * 1.04;
                 let takeProfit = change < 0 ? price * 1.08 : price * 0.92;
