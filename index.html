@@ -23,7 +23,7 @@
         <div class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl text-center relative overflow-hidden">
             <div id="scan-status" class="text-xs text-gray-400 uppercase tracking-widest mb-1">Анализ RSI + Уровни риска MEXC</div>
             
-            <div id="signal-direction" class="text-3xl font-black text-gray-500 my-2">ВЫБЕРИТЕ ДЕЙСТВИЕ</div>
+            <div id="signal-direction" class="text-3xl font-black text-gray-500 my-2">ГОТОВ К АНАЛИЗУ</div>
             
             <div class="grid grid-cols-2 gap-2 my-4 text-sm">
                 <div class="bg-[#131315] p-2.5 rounded-xl border border-gray-800/50">
@@ -44,7 +44,7 @@
                 </div>
             </div>
 
-            <!-- Две кнопки: Для выбранной монеты И Авто-сканер -->
+            <!-- Две кнопки -->
             <div class="space-y-2.5">
                 <button id="gen-btn" onclick="fetchSelectedSignal()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95">
                     🎯 АНАЛИЗ ВЫБРАННОЙ МОНЕТЫ
@@ -92,7 +92,7 @@
             toggleModal();
         }
 
-        // 1. АНАЛИЗ ТОЛЬКО ВЫБРАННОЙ МОНЕТЫ (SOL, BTC, ETH)
+        // 1. Анализ выбранной монеты
         async function fetchSelectedSignal() {
             const btn = document.getElementById('gen-btn');
             const dirElement = document.getElementById('signal-direction');
@@ -140,7 +140,7 @@
                     stopLoss = currentPrice * 0.99;
                     takeProfit = currentPrice * 1.01;
                     dirElement.className = "text-xl font-black my-2 text-gray-400";
-                    dirElement.innerText = "⏳ РЫНОК В ФЛЭТЕ (ЖДИТЕ)";
+                    dirElement.innerText = "⏳ РЫНОК В ФЛЭТЕ";
                 }
 
                 priceElement.innerText = "$" + currentPrice.toFixed(2);
@@ -159,7 +159,7 @@
             }
         }
 
-        // 2. АВТО-СКАНЕР САМОЙ ДИКОЙ МОНЕТЫ НА MEXC
+        // 2. Сканер диких монет через обход CORS
         async function scanWildMexcCoin() {
             const btn = document.getElementById('scan-btn');
             const dirElement = document.getElementById('signal-direction');
@@ -169,51 +169,51 @@
             const takeElement = document.getElementById('stat-take');
             const statusElement = document.getElementById('scan-status');
 
-            btn.innerText = "Сканирую весь MEXC...";
+            btn.innerText = "Ищем дикие монеты...";
             btn.disabled = true;
             dirElement.className = "text-xl font-bold my-2 text-purple-400 animate-pulse";
-            dirElement.innerText = "Поиск самой бешаной монеты...";
+            dirElement.innerText = "Сканирование рынка...";
 
             try {
-                let res = await fetch('https://api.mexc.com/api/v3/ticker/24hr');
-                let allTickers = await res.json();
+                // Используем безопасный публичный прокси для обхода CORS защиты биржи
+                let res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://api.mexc.com/api/v3/ticker/24hr'));
+                let data = await res.json();
+                let allTickers = JSON.parse(data.contents);
 
-                // Ищем только валидные USDT монеты с хорошим объемом
-                let usdtPairs = allTickers.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.quoteVolume) > 150000);
-
-                // Сортируем по силе движения за 24ч
+                let usdtPairs = allTickers.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.quoteVolume) > 100000);
                 usdtPairs.sort((a, b) => Math.abs(parseFloat(b.priceChangePercent)) - Math.abs(parseFloat(a.priceChangePercent)));
 
-                // Берем топ волатильную монету
-                let topVolatile = usdtPairs[Math.floor(Math.random() * Math.min(10, usdtPairs.length))];
+                let topVolatile = usdtPairs[Math.floor(Math.random() * Math.min(15, usdtPairs.length))];
                 let coinName = topVolatile.symbol.replace('USDT', '/USDT');
                 let price = parseFloat(topVolatile.lastPrice);
                 let change = parseFloat(topVolatile.priceChangePercent);
 
                 selectPair(topVolatile.symbol, coinName, "🔥");
 
-                let stopLoss = change < 0 ? price * 0.96 : price * 1.04;
-                let takeProfit = change < 0 ? price * 1.08 : price * 0.92;
+                let stopLoss = change < 0 ? price * 0.95 : price * 1.05;
+                let takeProfit = change < 0 ? price * 1.10 : price * 0.90;
 
                 if (change < 0) {
                     dirElement.className = "text-2xl font-black my-2 text-green-400";
-                    dirElement.innerText = "🚀 LONG (ОТСКОК)";
+                    dirElement.innerText = "🚀 LONG (РАКЕТА)";
                 } else {
                     dirElement.className = "text-2xl font-black my-2 text-red-400";
-                    dirElement.innerText = "📉 SHORT (ОТКАТ)";
+                    dirElement.innerText = "📉 SHORT (ОБВАЛ)";
                 }
 
-                statusElement.innerText = `🔥 Найдена горячая монета: ${coinName} (${change > 0 ? '+' : ''}${change.toFixed(2)}%)`;
+                statusElement.innerText = `🔥 Найдено: ${coinName} (${change > 0 ? '+' : ''}${change.toFixed(2)}%)`;
                 priceElement.innerText = "$" + (price < 0.01 ? price.toFixed(6) : price.toFixed(3));
                 rsiElement.innerText = Math.abs(Math.round(change));
-                stopElement.innerText = "$" + (stopLoss < 0.01 ? stopLoss.toFixed(6) : stopLoss.toFixed(3));
-                takeElement.innerText = "$" + (takeProfit < 0.01 ? takeProfit.toFixed(6) : takeProfit.toFixed(3));
+                stopLoss = stopLoss < 0.01 ? stopLoss.toFixed(6) : stopLoss.toFixed(3);
+                takeProfit = takeProfit < 0.01 ? takeProfit.toFixed(6) : takeProfit.toFixed(3);
+                stopElement.innerText = "$" + stopLoss;
+                takeElement.innerText = "$" + takeProfit;
 
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
 
             } catch (e) {
                 dirElement.className = "text-lg font-bold my-2 text-red-500";
-                dirElement.innerText = "Ошибка API MEXC";
+                dirElement.innerText = "Ошибка сканера";
             } finally {
                 btn.innerText = "🔥 ИСКАТЬ МОНЕТУ С ДИКОЙ ВОЛАТИЛЬНОСТЬЮ";
                 btn.disabled = false;
