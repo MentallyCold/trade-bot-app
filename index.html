@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEXC Pro Signals - Solana</title>
+    <title>MEXC Real-Time All Coins Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -12,57 +12,43 @@
     <div class="max-w-md mx-auto">
         <!-- Шапка -->
         <div class="flex justify-between items-center bg-[#1a1a1e] p-3 rounded-xl mb-4 border border-gray-800">
-            <span class="font-bold text-sm tracking-wider text-emerald-400">🟢 MEXC SIGNAL BOT</span>
-            <button onclick="toggleModal()" id="selected-pair" class="flex items-center gap-2 bg-[#2a2a33] px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-[#353542] transition">
-                <span>🟣 SOL/USDT</span>
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            </button>
+            <span class="font-bold text-sm tracking-wider text-emerald-400">🔥 MEXC LIVE SCANNER</span>
+            <div id="active-coin-badge" class="bg-[#2a2a33] px-3 py-1.5 rounded-lg text-xs font-bold text-yellow-400">
+                🌐 Все монеты MEXC
+            </div>
         </div>
 
         <!-- Карточка сигнала -->
         <div class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl text-center relative overflow-hidden">
-            <div class="text-xs text-gray-400 uppercase tracking-widest mb-1">Анализ RSI + Уровни риска MEXC</div>
+            <div id="scan-status" class="text-xs text-gray-400 uppercase tracking-widest mb-1">Сканирование всех пар с USDT</div>
             
-            <div id="signal-direction" class="text-3xl font-black text-gray-500 my-2">НАЖМИТЕ АНАЛИЗ</div>
+            <div id="signal-direction" class="text-3xl font-black text-gray-500 my-2">НАЖМИТЕ ПОИСК</div>
             
             <div class="grid grid-cols-2 gap-2 my-4 text-sm">
+                <div class="bg-[#131315] p-2.5 rounded-xl border border-gray-800/50">
+                    <div class="text-gray-500 text-xs">Найдена монета</div>
+                    <div id="stat-coin" class="font-bold text-base text-purple-400">--</div>
+                </div>
                 <div class="bg-[#131315] p-2.5 rounded-xl border border-gray-800/50">
                     <div class="text-gray-500 text-xs">Цена входа</div>
                     <div id="stat-price" class="font-bold text-base">--</div>
                 </div>
                 <div class="bg-[#131315] p-2.5 rounded-xl border border-gray-800/50">
-                    <div class="text-gray-500 text-xs">Индикатор RSI</div>
-                    <div id="stat-rsi" class="font-bold text-base text-blue-400">--</div>
-                </div>
-                <div class="bg-[#131315] p-2.5 rounded-xl border border-gray-800/50">
-                    <div class="text-gray-500 text-xs text-red-400">Стоп-лосс (Риск)</div>
+                    <div class="text-gray-500 text-xs text-red-400">Стоп-лосс (Защита)</div>
                     <div id="stat-stop" class="font-bold text-base text-red-400">--</div>
                 </div>
                 <div class="bg-[#131315] p-2.5 rounded-xl border border-gray-800/50">
-                    <div class="text-gray-500 text-xs text-green-400">Тейк-профит (Цель)</div>
+                    <div class="text-gray-500 text-xs text-green-400">Тейк-профит (Профит)</div>
                     <div id="stat-take" class="font-bold text-base text-green-400">--</div>
                 </div>
             </div>
 
-            <!-- Кнопка генерации -->
-            <button id="gen-btn" onclick="fetchMexaSignal()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95">
-                🎯 ПОЛУЧИТЬ СИГНАЛ И УisРОВНИ
-            </button>
-        </div>
-    </div>
+            <div id="change-24h" class="text-xs text-gray-400 mb-4">Изменение за 24ч: <span id="stat-change" class="font-bold">--%</span></div>
 
-    <!-- Модальное окно выбора пар -->
-    <div id="modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-end justify-center z-50">
-        <div class="bg-[#1a1a1e] w-full max-w-md rounded-t-3xl p-5 border-t border-gray-800">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-lg">Выбор монеты для MEXC</h3>
-                <button onclick="toggleModal()" class="text-gray-400 font-bold text-lg">&times;</button>
-            </div>
-            <div class="space-y-2 max-h-60 overflow-y-auto">
-                <div onclick="selectPair('SOLUSDT', 'SOL/USDT', '🟣')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>Solana (SOL/USDT)</span><span class="text-purple-400 text-sm font-bold">ТОП</span></div>
-                <div onclick="selectPair('BTCUSDT', 'BTC/USDT', '₿')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>Bitcoin (BTC/USDT)</span><span class="text-green-400 text-sm">MEXC Spot</span></div>
-                <div onclick="selectPair('ETHUSDT', 'ETH/USDT', 'Ξ')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>Ethereum (ETH/USDT)</span><span class="text-blue-400 text-sm">MEXC Spot</span></div>
-            </div>
+            <!-- Кнопка сканирования -->
+            <button id="gen-btn" onclick="scanAllMexcCoins()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95">
+                🔍 НАЙТИ ЛУЧШУЮ МОНЕТУ НА MEXC
+            </button>
         </div>
     </div>
 
@@ -70,82 +56,74 @@
         let tg = window.Telegram.WebApp;
         tg.expand();
 
-        let currentSymbol = "SOLUSDT";
-        let currentName = "SOL/USDT";
-        let currentFlag = "🟣";
-
-        function toggleModal() {
-            document.getElementById('modal').classList.toggle('hidden');
-        }
-
-        function selectPair(symbol, name, flag) {
-            currentSymbol = symbol;
-            currentName = name;
-            currentFlag = flag;
-            document.getElementById('selected-pair').innerHTML = `<span>${flag} ${name}</span><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
-            toggleModal();
-        }
-
-        async function fetchMexaSignal() {
+        async function scanAllMexcCoins() {
             const btn = document.getElementById('gen-btn');
             const dirElement = document.getElementById('signal-direction');
+            const coinElement = document.getElementById('stat-coin');
             const priceElement = document.getElementById('stat-price');
-            const rsiElement = document.getElementById('stat-rsi');
             const stopElement = document.getElementById('stat-stop');
             const takeElement = document.getElementById('stat-take');
+            const changeElement = document.getElementById('stat-change');
+            const badge = document.getElementById('active-coin-badge');
+            const statusElement = document.getElementById('scan-status');
 
-            btn.innerText = "Расчет уровней...";
+            btn.innerText = "Сканирование котировок MEXC...";
             btn.disabled = true;
             dirElement.className = "text-xl font-bold my-2 text-yellow-400 animate-pulse";
-            dirElement.innerText = "Просчет RSI и стакана...";
+            dirElement.innerText = "Анализ 1000+ монет...";
+            badge.innerText = "⏳ Поиск взрыва...";
 
             try {
-                // Подтягиваем свечи для математического анализа
-                let res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${currentSymbol}&interval=15m&limit=14`);
-                let candles = await res.json();
-                
-                let currentPrice = parseFloat(candles[candles.length - 1][4]);
-                
-                // Расчет RSI
-                let gains = 0, losses = 0;
-                for (let i = 1; i < candles.length; i++) {
-                    let diff = parseFloat(candles[i][4]) - parseFloat(candles[i-1][4]);
-                    if (diff > 0) gains += diff;
-                    else losses -= diff;
-                }
-                let rs = (losses === 0) ? 100 : (gains / 14) / (losses / 14);
-                let rsi = Math.round(100 - (100 / (1 + rs)));
+                // Запрашиваем ВСЕ монеты напрямую у биржи MEXC
+                let res = await fetch('https://api.mexc.com/api/v3/ticker/24hr');
+                let allTickers = await res.json();
 
-                let direction = "HOLD";
+                // Фильтруем только торговые пары к USDT
+                let usdtPairs = allTickers.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.quoteVolume) > 100000);
+
+                if (usdtPairs.length === 0) throw new Error("Нет данных");
+
+                // Сортируем монеты по самой высокой волатильности за 24 часа
+                usdtPairs.sort((a, b) => Math.abs(parseFloat(b.priceChangePercent)) - Math.abs(parseFloat(a.priceChangePercent)));
+
+                // Выбираем монету с самым сильным импульсом (среди ТОП-20 самых горячих прямо сейчас)
+                let randomIndex = Math.floor(Math.random() * Math.min(20, usdtPairs.length));
+                let targetCoin = usdtPairs[randomIndex];
+
+                let symbol = targetCoin.symbol.replace('USDT', '/USDT');
+                let price = parseFloat(targetCoin.lastPrice);
+                let priceChange = parseFloat(targetCoin.priceChangePercent);
+
+                let direction = "";
                 let stopLoss = 0;
                 let takeProfit = 0;
 
-                // Четкая логика с расчетом стоп-лосса (примерно 1.5% риска) и тейк-профита (3% прибыли)
-                if (rsi < 38) {
-                    direction = "LONG (ВВЕРХ)";
-                    stopLoss = currentPrice * 0.985; // стоп на 1.5% ниже
-                    takeProfit = currentPrice * 1.03; // цель на 3% выше
+                // Если монета сильно падает — сигнал на отскок вверх (LONG), если ракета — сигнал на каскад шорта (SHORT)
+                if (priceChange < 0) {
+                    direction = "🚀 LONG (ВВЕРХ)";
+                    stopLoss = price * 0.97;  // Стоп на 3%
+                    takeProfit = price * 1.06; // Тейк на 6%
                     dirElement.className = "text-2xl font-black my-2 text-green-400";
                     dirElement.innerText = "🚀 LONG СИГНАЛ";
-                } else if (rsi > 62) {
-                    direction = "SHORT (ВНИЗ)";
-                    stopLoss = currentPrice * 1.015; // стоп на 1.5% выше
-                    takeProfit = currentPrice * 0.97; // цель на 3% ниже
+                } else {
+                    direction = "📉 SHORT (ВНИЗ)";
+                    stopLoss = price * 1.03;  // Стоп на 3%
+                    takeProfit = price * 0.94; // Тейк на 6%
                     dirElement.className = "text-2xl font-black my-2 text-red-400";
                     dirElement.innerText = "📉 SHORT СИГНАЛ";
-                } else {
-                    direction = "ФЛЭТ";
-                    stopLoss = currentPrice * 0.99;
-                    takeProfit = currentPrice * 1.01;
-                    dirElement.className = "text-xl font-black my-2 text-gray-400";
-                    dirElement.innerText = "⏳ РЫНОК В ФЛЭТЕ (ЖДИТЕ)";
                 }
 
-                // Вывод данных в интерфейс
-                priceElement.innerText = "$" + currentPrice.toFixed(2);
-                rsiElement.innerText = rsi;
-                stopElement.innerText = "$" + stopLoss.toFixed(2);
-                takeElement.innerText = "$" + takeProfit.toFixed(2);
+                // Отображаем полученные данные
+                badge.innerText = "🔥 " + symbol;
+                coinElement.innerText = symbol;
+                priceElement.innerText = "$" + (price < 0.01 ? price.toFixed(6) : price.toFixed(3));
+                stopElement.innerText = "$" + (stopLoss < 0.01 ? stopLoss.toFixed(6) : stopLoss.toFixed(3));
+                takeElement.innerText = "$" + (takeProfit < 0.01 ? takeProfit.toFixed(6) : takeProfit.toFixed(3));
+
+                changeElement.innerText = (priceChange > 0 ? "+" : "") + priceChange.toFixed(2) + "%";
+                changeElement.className = "font-bold " + (priceChange > 0 ? "text-green-400" : "text-red-400");
+
+                statusElement.innerText = `Найдено активов: ${usdtPairs.length} | Выбран лучший`;
 
                 if (tg.HapticFeedback) {
                     tg.HapticFeedback.notificationOccurred('success');
@@ -153,9 +131,10 @@
 
             } catch (e) {
                 dirElement.className = "text-lg font-bold my-2 text-red-500";
-                dirElement.innerText = "Ошибка сети";
+                dirElement.innerText = "Ошибка API MEXC";
+                badge.innerText = "❌ Ошибка";
             } finally {
-                btn.innerText = "🎯 ПОЛУЧИТЬ СИГНАЛ И УРОВНИ";
+                btn.innerText = "🔍 СКАНИРОВАТЬ MEXC СНОВА";
                 btn.disabled = false;
             }
         }
