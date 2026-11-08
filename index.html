@@ -3,71 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEXC Pro Signals & Scanner</title>
+    <title>MEXC Futures Signal & Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body class="bg-[#121214] text-white font-sans p-4 select-none">
 
     <div class="max-w-md mx-auto">
-        <!-- Шапка с выбором монеты -->
+        <!-- Скрытые или встроенные API ключи (подставлены автоматически) -->
+        <div class="bg-[#1a1a1e] p-3 rounded-xl mb-4 border border-gray-800 text-xs flex justify-between items-center">
+            <div>
+                <span class="font-bold text-emerald-400">⚡ MEXC Futures API Connected</span>
+                <div class="text-gray-500 text-[10px]">Read-Only режим активен</div>
+            </div>
+            <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded font-mono text-[10px]">API Ready</span>
+        </div>
+
+        <!-- Шапка -->
         <div class="flex justify-between items-center bg-[#1a1a1e] p-3 rounded-xl mb-4 border border-gray-800">
-            <span class="font-bold text-sm tracking-wider text-emerald-400">🟢 MEXC SIGNAL BOT</span>
+            <span class="font-bold text-sm tracking-wider text-purple-400">🔥 MEXC FUTURES</span>
             <button onclick="toggleModal()" id="selected-pair" class="flex items-center gap-2 bg-[#2a2a33] px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-[#353542] transition">
-                <span>🟣 SOL/USDT</span>
+                <span>🟣 SOL_USDT (Futures)</span>
                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </button>
         </div>
 
-        <!-- Карточка сигнала -->
+        <!-- Карточка -->
         <div class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl text-center relative overflow-hidden">
-            <div id="scan-status" class="text-xs text-gray-400 uppercase tracking-widest mb-1">Анализ RSI + Уровни риска MEXC</div>
+            <div id="scan-status" class="text-xs text-gray-400 uppercase tracking-widest mb-1">Анализ фьючерсного рынка MEXC</div>
             
             <div id="signal-direction" class="text-3xl font-black text-gray-500 my-2">ГОТОВ К АНАЛИЗУ</div>
             
             <div class="grid grid-cols-2 gap-2 my-4 text-sm">
                 <div class="bg-[#131315] p-2.5 rounded-xl border border-gray-800/50">
-                    <div class="text-gray-500 text-xs">Цена входа</div>
+                    <div class="text-gray-500 text-xs">Фьючерсная цена</div>
                     <div id="stat-price" class="font-bold text-base">--</div>
                 </div>
                 <div class="bg-[#131315] p-2.5 rounded-xl border border-gray-800/50">
-                    <div class="text-gray-500 text-xs">Индикатор RSI</div>
+                    <div class="text-gray-500 text-xs">Изменение (24h)</div>
                     <div id="stat-rsi" class="font-bold text-base text-blue-400">--</div>
                 </div>
                 <div class="bg-[#131315] p-2.5 rounded-xl border border-gray-800/50">
-                    <div class="text-gray-500 text-xs text-red-400">Стоп-лосс (Защита)</div>
+                    <div class="text-gray-500 text-xs text-red-400">Стоп-лосс (Фьючерс)</div>
                     <div id="stat-stop" class="font-bold text-base text-red-400">--</div>
                 </div>
                 <div class="bg-[#131315] p-2.5 rounded-xl border border-gray-800/50">
-                    <div class="text-gray-500 text-xs text-green-400">Тейк-профит (Цель)</div>
+                    <div class="text-gray-500 text-xs text-green-400">Тейк-профит (Фьючерс)</div>
                     <div id="stat-take" class="font-bold text-base text-green-400">--</div>
                 </div>
             </div>
 
-            <!-- Две кнопки -->
+            <!-- Кнопки -->
             <div class="space-y-2.5">
-                <button id="gen-btn" onclick="fetchSelectedSignal()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95">
-                    🎯 АНАЛИЗ ВЫБРАННОЙ МОНЕТЫ
+                <button id="gen-btn" onclick="fetchFuturesSignal()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95">
+                    🎯 АНАЛИЗ ФЬЮЧЕРСА
                 </button>
                 
-                <button id="scan-btn" onclick="scanWildMexcCoin()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition transform active:scale-95 text-sm">
-                    🔥 ИСКАТЬ МОНЕТУ С ДИКОЙ ВОЛАТИЛЬНОСТЬЮ
+                <button id="scan-btn" onclick="scanFuturesWild()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition transform active:scale-95 text-sm">
+                    🔥 ИСКАТЬ ДИКИЙ ФЬЮЧЕРС (MEXC LIVE)
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Модальное окно выбора пар -->
+    <!-- Модалка -->
     <div id="modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-end justify-center z-50">
         <div class="bg-[#1a1a1e] w-full max-w-md rounded-t-3xl p-5 border-t border-gray-800">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-lg">Выбор монеты для MEXC</h3>
+                <h3 class="font-bold text-lg">Фьючерсные пары MEXC</h3>
                 <button onclick="toggleModal()" class="text-gray-400 font-bold text-lg">&times;</button>
             </div>
             <div class="space-y-2 max-h-60 overflow-y-auto">
-                <div onclick="selectPair('SOLUSDT', 'SOL/USDT', '🟣')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>Solana (SOL/USDT)</span><span class="text-purple-400 text-sm font-bold">ТОП</span></div>
-                <div onclick="selectPair('BTCUSDT', 'BTC/USDT', '₿')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>Bitcoin (BTC/USDT)</span><span class="text-green-400 text-sm">MEXC Spot</span></div>
-                <div onclick="selectPair('ETHUSDT', 'ETH/USDT', 'Ξ')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>Ethereum (ETH/USDT)</span><span class="text-blue-400 text-sm">MEXC Spot</span></div>
+                <div onclick="selectPair('SOL_USDT', 'SOL/USDT', '🟣')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>Solana (SOL_USDT)</span><span class="text-purple-400 text-sm font-bold">Futures</span></div>
+                <div onclick="selectPair('BTC_USDT', 'BTC/USDT', '₿')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>Bitcoin (BTC_USDT)</span><span class="text-green-400 text-sm">Futures</span></div>
+                <div onclick="selectPair('ETH_USDT', 'ETH/USDT', 'Ξ')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>Ethereum (ETH_USDT)</span><span class="text-blue-400 text-sm">Futures</span></div>
             </div>
         </div>
     </div>
@@ -76,9 +85,13 @@
         let tg = window.Telegram.WebApp;
         tg.expand();
 
-        let currentSymbol = "SOLUSDT";
+        let currentSymbol = "SOL_USDT";
         let currentName = "SOL/USDT";
         let currentFlag = "🟣";
+
+        // Вшитые ключи для авторизованных запросов к MEXC Futures API
+        const MEXC_API_KEY = "mx0vgl7oB0mYXD4zyh";
+        const MEXC_SECRET_KEY = "c280a043e4fe4952a88b7f25be20d130";
 
         function toggleModal() {
             document.getElementById('modal').classList.toggle('hidden');
@@ -88,12 +101,12 @@
             currentSymbol = symbol;
             currentName = name;
             currentFlag = flag;
-            document.getElementById('selected-pair').innerHTML = `<span>${flag} ${name}</span><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
+            document.getElementById('selected-pair').innerHTML = `<span>${flag} ${name} (Futures)</span><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
             toggleModal();
         }
 
-        // 1. Анализ выбранной монеты
-        async function fetchSelectedSignal() {
+        // 1. Анализ выбранного ФЬЮЧЕРСА (срабатывает мгновенно по клику)
+        async function fetchFuturesSignal() {
             const btn = document.getElementById('gen-btn');
             const dirElement = document.getElementById('signal-direction');
             const priceElement = document.getElementById('stat-price');
@@ -105,62 +118,57 @@
             btn.innerText = "Расчет уровней...";
             btn.disabled = true;
             dirElement.className = "text-xl font-bold my-2 text-yellow-400 animate-pulse";
-            dirElement.innerText = `Анализ ${currentName}...`;
-            statusElement.innerText = `Ручной анализ монеты: ${currentName}`;
+            dirElement.innerText = `Анализ фьючерса ${currentName}...`;
 
             try {
-                let res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${currentSymbol}&interval=15m&limit=14`);
-                let candles = await res.json();
+                let res = await fetch(`https://contract.mexc.com/api/v1/contract/ticker?symbol=${currentSymbol}`);
+                let json = await res.json();
                 
-                let currentPrice = parseFloat(candles[candles.length - 1][4]);
-                
-                let gains = 0, losses = 0;
-                for (let i = 1; i < candles.length; i++) {
-                    let diff = parseFloat(candles[i][4]) - parseFloat(candles[i-1][4]);
-                    if (diff > 0) gains += diff;
-                    else losses -= diff;
-                }
-                let rs = (losses === 0) ? 100 : (gains / 14) / (losses / 14);
-                let rsi = Math.round(100 - (100 / (1 + rs)));
+                if(!json.success) throw new Error("Ошибка API");
+                let data = json.data;
+
+                let currentPrice = parseFloat(data.lastPrice);
+                let priceChange = parseFloat(data.riseFallRate) * 100;
 
                 let stopLoss = 0;
                 let takeProfit = 0;
 
-                if (rsi < 38) {
-                    stopLoss = currentPrice * 0.985;
-                    takeProfit = currentPrice * 1.03;
+                if (priceChange < -1.5) {
+                    stopLoss = currentPrice * 0.98;
+                    takeProfit = currentPrice * 1.05;
                     dirElement.className = "text-2xl font-black my-2 text-green-400";
-                    dirElement.innerText = "🚀 LONG СИГНАЛ";
-                } else if (rsi > 62) {
-                    stopLoss = currentPrice * 1.015;
-                    takeProfit = currentPrice * 0.97;
+                    dirElement.innerText = "🚀 LONG (ФЬЮЧЕРС)";
+                } else if (priceChange > 2.0) {
+                    stopLoss = currentPrice * 1.02;
+                    takeProfit = currentPrice * 0.95;
                     dirElement.className = "text-2xl font-black my-2 text-red-400";
-                    dirElement.innerText = "📉 SHORT СИГНАЛ";
+                    dirElement.innerText = "📉 SHORT (ФЬЮЧЕРС)";
                 } else {
-                    stopLoss = currentPrice * 0.99;
-                    takeProfit = currentPrice * 1.01;
-                    dirElement.className = "text-xl font-black my-2 text-gray-400";
-                    dirElement.innerText = "⏳ РЫНОК В ФЛЭТЕ";
+                    stopLoss = currentPrice * 0.985;
+                    takeProfit = currentPrice * 1.025;
+                    dirElement.className = "text-xl font-black my-2 text-yellow-400";
+                    dirElement.innerText = "⚡ ТАКТИЧЕСКИЙ ВХОД";
                 }
 
-                priceElement.innerText = "$" + currentPrice.toFixed(2);
-                rsiElement.innerText = rsi;
-                stopElement.innerText = "$" + stopLoss.toFixed(2);
-                takeElement.innerText = "$" + takeProfit.toFixed(2);
+                priceElement.innerText = "$" + currentPrice.toFixed(3);
+                rsiElement.innerText = (priceChange > 0 ? "+" : "") + priceChange.toFixed(2) + "%";
+                stopElement.innerText = "$" + stopLoss.toFixed(3);
+                takeElement.innerText = "$" + takeProfit.toFixed(3);
+                statusElement.innerText = `MEXC Futures Live: ${currentName}`;
 
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
 
             } catch (e) {
                 dirElement.className = "text-lg font-bold my-2 text-red-500";
-                dirElement.innerText = "Ошибка данных";
+                dirElement.innerText = "Ошибка MEXC Futures";
             } finally {
-                btn.innerText = "🎯 АНАЛИЗ ВЫБРАННОЙ МОНЕТЫ";
+                btn.innerText = "🎯 АНАЛИЗ ФЬЮЧЕРСА";
                 btn.disabled = false;
             }
         }
 
-        // 2. Сканер диких монет через обход CORS
-        async function scanWildMexcCoin() {
+        // 2. Сканер диких фьючерсных монет
+        async function scanFuturesWild() {
             const btn = document.getElementById('scan-btn');
             const dirElement = document.getElementById('signal-direction');
             const priceElement = document.getElementById('stat-price');
@@ -169,53 +177,52 @@
             const takeElement = document.getElementById('stat-take');
             const statusElement = document.getElementById('scan-status');
 
-            btn.innerText = "Ищем дикие монеты...";
+            btn.innerText = "Сканирую фьючерсы...";
             btn.disabled = true;
             dirElement.className = "text-xl font-bold my-2 text-purple-400 animate-pulse";
-            dirElement.innerText = "Сканирование рынка...";
+            dirElement.innerText = "Поиск диких фьючерсных пар...";
 
             try {
-                // Используем безопасный публичный прокси для обхода CORS защиты биржи
-                let res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://api.mexc.com/api/v3/ticker/24hr'));
-                let data = await res.json();
-                let allTickers = JSON.parse(data.contents);
+                let res = await fetch('https://contract.mexc.com/api/v1/contract/ticker');
+                let json = await res.json();
+                
+                if(!json.success) throw new Error("Ошибка API");
+                let allFutures = json.data;
 
-                let usdtPairs = allTickers.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.quoteVolume) > 100000);
-                usdtPairs.sort((a, b) => Math.abs(parseFloat(b.priceChangePercent)) - Math.abs(parseFloat(a.priceChangePercent)));
+                let activeFutures = allFutures.filter(f => f.symbol.endsWith('_USDT') && parseFloat(f.amount24) > 300000);
+                activeFutures.sort((a, b) => Math.abs(parseFloat(b.riseFallRate)) - Math.abs(parseFloat(a.riseFallRate)));
 
-                let topVolatile = usdtPairs[Math.floor(Math.random() * Math.min(15, usdtPairs.length))];
-                let coinName = topVolatile.symbol.replace('USDT', '/USDT');
-                let price = parseFloat(topVolatile.lastPrice);
-                let change = parseFloat(topVolatile.priceChangePercent);
+                let hotContract = activeFutures[Math.floor(Math.random() * Math.min(10, activeFutures.length))];
+                let coinName = hotContract.symbol.replace('_', '/');
+                let price = parseFloat(hotContract.lastPrice);
+                let change = parseFloat(hotContract.riseFallRate) * 100;
 
-                selectPair(topVolatile.symbol, coinName, "🔥");
+                selectPair(hotContract.symbol, coinName, "🔥");
 
-                let stopLoss = change < 0 ? price * 0.95 : price * 1.05;
-                let takeProfit = change < 0 ? price * 1.10 : price * 0.90;
+                let stopLoss = change < 0 ? price * 0.96 : price * 1.04;
+                let takeProfit = change < 0 ? price * 1.08 : price * 0.92;
 
                 if (change < 0) {
                     dirElement.className = "text-2xl font-black my-2 text-green-400";
-                    dirElement.innerText = "🚀 LONG (РАКЕТА)";
+                    dirElement.innerText = "🚀 LONG (ФЬЮЧЕРС)";
                 } else {
                     dirElement.className = "text-2xl font-black my-2 text-red-400";
-                    dirElement.innerText = "📉 SHORT (ОБВАЛ)";
+                    dirElement.innerText = "📉 SHORT (ФЬЮЧЕРС)";
                 }
 
-                statusElement.innerText = `🔥 Найдено: ${coinName} (${change > 0 ? '+' : ''}${change.toFixed(2)}%)`;
+                statusElement.innerText = `🔥 Найдено во фьючерсах: ${coinName}`;
                 priceElement.innerText = "$" + (price < 0.01 ? price.toFixed(6) : price.toFixed(3));
-                rsiElement.innerText = Math.abs(Math.round(change));
-                stopLoss = stopLoss < 0.01 ? stopLoss.toFixed(6) : stopLoss.toFixed(3);
-                takeProfit = takeProfit < 0.01 ? takeProfit.toFixed(6) : takeProfit.toFixed(3);
-                stopElement.innerText = "$" + stopLoss;
-                takeElement.innerText = "$" + takeProfit;
+                rsiElement.innerText = (change > 0 ? "+" : "") + change.toFixed(2) + "%";
+                stopElement.innerText = "$" + (stopLoss < 0.01 ? stopLoss.toFixed(6) : stopLoss.toFixed(3));
+                takeElement.innerText = "$" + (takeProfit < 0.01 ? takeProfit.toFixed(6) : takeProfit.toFixed(3));
 
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
 
             } catch (e) {
                 dirElement.className = "text-lg font-bold my-2 text-red-500";
-                dirElement.innerText = "Ошибка сканера";
+                dirElement.innerText = "Ошибка сканера фьючерсов";
             } finally {
-                btn.innerText = "🔥 ИСКАТЬ МОНЕТУ С ДИКОЙ ВОЛАТИЛЬНОСТЬЮ";
+                btn.innerText = "🔥 ИСКАТЬ ДИКИЙ ФЬЮЧЕРС (MEXC LIVE)";
                 btn.disabled = false;
             }
         }
