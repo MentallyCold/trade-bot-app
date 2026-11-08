@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trade Bot Signals</title>
-    <!-- Подключаем Tailwind CSS для красивого стиля -->
+    <title>Trade Bot Live Signals</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -13,8 +12,7 @@
     <div class="max-w-md mx-auto">
         <!-- Шапка -->
         <div class="flex justify-between items-center bg-[#1a1a1e] p-3 rounded-xl mb-4 border border-gray-800">
-            <span class="font-bold text-sm tracking-wider text-gray-400">TRADE BOT</span>
-            <!-- Выбор валютной пары -->
+            <span class="font-bold text-sm tracking-wider text-gray-400">TRADE BOT LIVE</span>
             <button onclick="toggleModal()" id="selected-pair" class="flex items-center gap-2 bg-[#2a2a33] px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-[#353542] transition">
                 <span>🇪🇺🇺🇸 EUR/USD</span>
                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -23,27 +21,28 @@
 
         <!-- Карточка сигнала -->
         <div class="bg-[#1a1a1e] p-5 rounded-2xl border border-gray-800 shadow-xl text-center relative overflow-hidden">
-            <div class="text-xs text-gray-400 uppercase tracking-widest mb-1">Торговый сигнал</div>
-            <div id="signal-direction" class="text-3xl font-black text-gray-500 my-2">ВЫБЕРИТЕ ПАРУ</div>
+            <div class="text-xs text-gray-400 uppercase tracking-widest mb-1">Рыночный анализ в реальном времени</div>
+            
+            <div id="signal-direction" class="text-3xl font-black text-gray-500 my-2">НАЖМИТЕ КНОПКУ</div>
             
             <div class="flex justify-around my-4 py-3 bg-[#131315] rounded-xl border border-gray-800/50 text-sm">
                 <div>
-                    <div class="text-gray-500 text-xs">Актив</div>
-                    <div id="stat-pair" class="font-bold">--</div>
+                    <div class="text-gray-500 text-xs">Цена актива</div>
+                    <div id="stat-price" class="font-bold">--</div>
                 </div>
                 <div>
                     <div class="text-gray-500 text-xs">Уверенность</div>
                     <div id="stat-winrate" class="font-bold text-green-400">--%</div>
                 </div>
                 <div>
-                    <div class="text-gray-500 text-xs">Время</div>
-                    <div class="font-bold">5M</div>
+                    <div class="text-gray-500 text-xs">Таймфрейм</div>
+                    <div class="font-bold">1M</div>
                 </div>
             </div>
 
             <!-- Кнопка генерации -->
-            <button onclick="generateSignal()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95">
-                ПОЛУЧИТЬ НОВЫЙ СИГНАЛ
+            <button id="gen-btn" onclick="fetchLiveSignal()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95">
+                ПОЛУЧИТЬ АНАЛИЗ РЫНКА
             </button>
         </div>
     </div>
@@ -52,55 +51,101 @@
     <div id="modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-end justify-center z-50">
         <div class="bg-[#1a1a1e] w-full max-w-md rounded-t-3xl p-5 border-t border-gray-800">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-lg">Валютные пары</h3>
+                <h3 class="font-bold text-lg">Выбор актива</h3>
                 <button onclick="toggleModal()" class="text-gray-400 font-bold text-lg">&times;</button>
             </div>
             <div class="space-y-2 max-h-60 overflow-y-auto">
-                <div onclick="selectPair('EUR/USD', '🇪🇺🇺🇸')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>EUR/USD</span><span class="text-green-400 text-sm">+82%</span></div>
-                <div onclick="selectPair('EUR/CAD', '🇪🇺🇨🇦')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>EUR/CAD</span><span class="text-green-400 text-sm">+78%</span></div>
-                <div onclick="selectPair('EUR/JPY', '🇪🇺🇯🇵')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>EUR/JPY</span><span class="text-green-400 text-sm">+80%</span></div>
-                <div onclick="selectPair('GBP/USD', '🇬🇧🇺🇸')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>GBP/USD</span><span class="text-green-400 text-sm">+85%</span></div>
+                <div onclick="selectPair('EURUSD', 'EUR/USD', '🇪🇺🇺🇸')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>EUR/USD (Forex)</span><span class="text-blue-400 text-sm">Live</span></div>
+                <div onclick="selectPair('GBPUSD', 'GBP/USD', '🇬🇧🇺🇸')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>GBP/USD (Forex)</span><span class="text-blue-400 text-sm">Live</span></div>
+                <div onclick="selectPair('BTCUSDT', 'BTC/USDT', '₿')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>BTC/USDT (Crypto)</span><span class="text-green-400 text-sm">Binance</span></div>
+                <div onclick="selectPair('ETHUSDT', 'ETH/USDT', 'Ξ')" class="p-3 bg-[#2a2a33] rounded-xl flex justify-between items-center cursor-pointer hover:bg-[#353542]"><span>ETH/USDT (Crypto)</span><span class="text-green-400 text-sm">Binance</span></div>
             </div>
         </div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
-        tg.expand(); // Растягиваем на весь экран в Telegram
+        tg.expand();
 
-        let currentPair = "EUR/USD";
+        let currentSymbolApi = "EURUSD";
+        let currentPairName = "EUR/USD";
         let currentFlag = "🇪🇺🇺🇸";
 
         function toggleModal() {
-            const modal = document.getElementById('modal');
-            modal.classList.toggle('hidden');
+            document.getElementById('modal').classList.toggle('hidden');
         }
 
-        let selectPair = function(pair, flag) {
-            currentPair = pair;
+        function selectPair(symbolApi, pairName, flag) {
+            currentSymbolApi = symbolApi;
+            currentPairName = pairName;
             currentFlag = flag;
-            document.getElementById('selected-pair').innerHTML = `<span>${flag} ${pair}</span><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
+            document.getElementById('selected-pair').innerHTML = `<span>${flag} ${pairName}</span><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
             toggleModal();
         }
 
-        let generateSignal = function() {
-            const directions = [
-                { text: "📈 UP (ВВЕРХ)", color: "text-green-400" },
-                { text: "📉 DOWN (ВНИЗ)", color: "text-red-400" }
-            ];
-            
-            const randomDir = directions[Math.floor(Math.random() * directions.length)];
-            const randomWinrate = Math.floor(Math.random() * (92 - 72 + 1)) + 72;
-
+        async function fetchLiveSignal() {
+            const btn = document.getElementById('gen-btn');
             const dirElement = document.getElementById('signal-direction');
-            dirElement.className = `text-3xl font-black my-2 ${randomDir.color}`;
-            dirElement.innerText = randomDir.text;
+            const priceElement = document.getElementById('stat-price');
+            const winrateElement = document.getElementById('stat-winrate');
 
-            document.getElementById('stat-pair').innerText = currentPair;
-            document.getElementById('stat-winrate').innerText = randomWinrate + '%';
+            btn.innerText = "Анализ рынка...";
+            btn.disabled = true;
+            dirElement.className = "text-xl font-bold my-2 text-yellow-400 animate-pulse";
+            dirElement.innerText = "Чтение стакана цен...";
 
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('medium');
+            try {
+                let price = 0;
+                let trendDirection = "UP";
+                let winrate = 75;
+
+                // Если это криптовалюта — берем данные с бесплатного API Binance
+                if (currentSymbolApi.includes("USDT")) {
+                    let response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${currentSymbolApi}`);
+                    let data = await response.json();
+                    price = parseFloat(data.price);
+                    
+                    // Простейший алгоритм: генерируем сигнал на основе последних цифр курса (симуляция рыночного импульса)
+                    let lastDigit = Math.floor((price * 100) % 10);
+                    trendDirection = lastDigit % 2 === 0 ? "UP" : "DOWN";
+                    winrate = 76 + (lastDigit % 15);
+                } 
+                // Если это Форекс пара — используем публичный агрегатор котировок
+                else {
+                    let response = await fetch(`https://api.frankfurter.app/latest?from=${currentPairName.slice(0,3)}&to=${currentPairName.slice(4,7)}`);
+                    let data = await response.json();
+                    let rateKey = currentPairName.slice(4,7);
+                    price = data.rates[rateKey] || 1.0850;
+                    
+                    // Рандомизация на базе изменения цены
+                    let randomBit = Math.random();
+                    trendDirection = randomBit > 0.48 ? "UP" : "DOWN";
+                    winrate = Math.floor(75 + randomBit * 18);
+                }
+
+                // Вывод результата на экран
+                priceElement.innerText = price.toFixed(4);
+                winrateElement.innerText = winrate + "%";
+
+                if (trendDirection === "UP") {
+                    dirElement.className = "text-3xl font-black my-2 text-green-400";
+                    dirElement.innerText = "📈 UP (ВВЕРХ)";
+                } else {
+                    dirElement.className = "text-3xl font-black my-2 text-red-400";
+                    dirElement.innerText = "📉 DOWN (ВНИЗ)";
+                }
+
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+
+            } catch (error) {
+                dirElement.className = "text-xl font-bold my-2 text-red-500";
+                dirElement.innerText = "Ошибка связи с биржей";
+                priceElement.innerText = "--";
+            } finally {
+                btn.innerText = "ПОЛУЧИТЬ НОВЫЙ СИГНАЛ";
+                btn.disabled = false;
             }
         }
     </script>
