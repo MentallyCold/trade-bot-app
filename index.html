@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEXC Futures Pro Scanner (1m)</title>
+    <title>MEXC Futures Pro Scanner (Safe Math)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -14,7 +14,7 @@
         <div class="bg-[#1a1a1e] p-3 rounded-xl mb-4 border border-gray-800 text-xs flex justify-between items-center">
             <div>
                 <span class="font-bold text-emerald-400">⚡ PRO TECHNICAL SCANNER</span>
-                <div class="text-gray-500 text-[10px]">RSI + EMA + Volume Engine (1m)</div>
+                <div class="text-gray-500 text-[10px]">Safe Math Engine (1m)</div>
             </div>
             <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded font-mono text-[10px]">Live 1m</span>
         </div>
@@ -108,7 +108,6 @@
             document.getElementById('selected-pair').innerHTML = `<span>${flag} ${name} (Futures)</span><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
         }
 
-        // Расчет RSI по массиву цен закрытия
         function calculateRSI(closes, period = 14) {
             if (closes.length < period + 1) return 50;
             let gains = 0, losses = 0;
@@ -135,7 +134,7 @@
             return 100 - (100 / (1 + rs));
         }
 
-        // Анализ 1-минутных свечей и генерация технического сигнала
+        // Защищенный расчет уровней (без багов с космическими ценами)
         async function analyzeTechnicalSignal() {
             const btn = document.getElementById('gen-btn');
             const dirElement = document.getElementById('signal-direction');
@@ -148,60 +147,51 @@
             btn.innerText = "Анализ 1м свечей...";
             btn.disabled = true;
             dirElement.className = "text-xl font-bold my-2 text-yellow-400 animate-pulse";
-            dirElement.innerText = "Расчет минутного RSI...";
+            dirElement.innerText = "Расчет безопасных уровней...";
 
             try {
-                // Запрашиваем 50 свечей минутного таймфрейма (interval=1m)
                 let res = await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${currentSymbol}&interval=1m&limit=50`);
                 let klines = await res.json();
 
                 let closes = klines.map(k => parseFloat(k[4])); 
-                let highs = klines.map(k => parseFloat(k[2]));  
-                let lows = klines.map(k => parseFloat(k[3]));   
-
                 let currentPrice = closes[closes.length - 1];
                 let rsi = calculateRSI(closes);
-
-                let recentLow = Math.min(...lows.slice(-5));
-                let recentHigh = Math.max(...highs.slice(-5));
 
                 let stopLoss = 0;
                 let takeProfit = 0;
 
+                // Бронебойная математика: фиксированный адекватный риск (Стоп 1.2%, Тейк 2.5%)
                 if (rsi < 45) {
-                    stopLoss = recentLow * 0.995;
-                    let risk = currentPrice - stopLoss;
-                    takeProfit = currentPrice + (risk * 2.2);
-
+                    stopLoss = currentPrice * 0.988;  // Стоп ниже на 1.2%
+                    takeProfit = currentPrice * 1.025; // Тейк выше на 2.5%
                     dirElement.className = "text-2xl font-black my-2 text-green-400";
                     dirElement.innerText = "🚀 СИГНАЛ: LONG (1m)";
                 } else {
-                    stopLoss = recentHigh * 1.005;
-                    let risk = stopLoss - currentPrice;
-                    takeProfit = currentPrice - (risk * 2.2);
-
+                    stopLoss = currentPrice * 1.012;  // Стоп выше на 1.2%
+                    takeProfit = currentPrice * 0.975; // Тейк ниже на 2.5%
                     dirElement.className = "text-2xl font-black my-2 text-red-400";
                     dirElement.innerText = "📉 СИГНАЛ: SHORT (1m)";
                 }
 
-                priceElement.innerText = "$" + (currentPrice < 1 ? currentPrice.toFixed(5) : currentPrice.toFixed(2));
-                rsiElement.innerText = rsi.toFixed(1) + (rsi < 40 ? " ( Oversold )" : rsi > 60 ? " ( Overbought )" : " ( Neutral )");
-                stopElement.innerText = "$" + (stopLoss < 1 ? stopLoss.toFixed(5) : stopLoss.toFixed(2));
-                takeElement.innerText = "$" + (takeProfit < 1 ? takeProfit.toFixed(5) : takeProfit.toFixed(2));
-                statusElement.innerText = `Минутный анализ завершен | ${currentName}`;
+                let decimals = currentPrice < 1 ? 5 : 2;
+                priceElement.innerText = "$" + currentPrice.toFixed(decimals);
+                rsiElement.innerText = rsi.toFixed(1) + (rsi < 40 ? " (Oversold)" : rsi > 60 ? " (Overbought)" : " (Neutral)");
+                stopElement.innerText = "$" + stopLoss.toFixed(decimals);
+                takeElement.innerText = "$" + takeProfit.toFixed(decimals);
+                statusElement.innerText = `Анализ завершен | ${currentName}`;
 
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
 
             } catch (e) {
                 dirElement.className = "text-lg font-bold my-2 text-red-500";
-                dirElement.innerText = "Ошибка загрузки 1м свечей";
+                dirElement.innerText = "Ошибка загрузки данных";
             } finally {
                 btn.innerText = "🎯 АНАЛИЗАТОР СВЕЧЕЙ (1m RSI)";
                 btn.disabled = false;
             }
         }
 
-        // Сканер горячих монет по 1-минутным данным
+        // Безопасный сканер импульсов
         async function scanWildMarket() {
             const btn = document.getElementById('scan-btn');
             const dirElement = document.getElementById('signal-direction');
@@ -211,7 +201,7 @@
             const takeElement = document.getElementById('stat-take');
             const statusElement = document.getElementById('scan-status');
 
-            btn.innerText = "Сканирую 1м стаканы...";
+            btn.innerText = "Сканирую стаканы...";
             btn.disabled = true;
             dirElement.className = "text-xl font-bold my-2 text-purple-400 animate-pulse";
             dirElement.innerText = "Поиск минутного импульса...";
@@ -231,45 +221,39 @@
 
                 setScannedPair(coinSymbol, coinName, "🔥");
 
-                // Загружаем минутные свечи (interval=1m) для найденной монеты
                 let klinesRes = await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${coinSymbol}&interval=1m&limit=30`);
                 let klines = await klinesRes.json();
                 let closes = klines.map(k => parseFloat(k[4]));
-                let lows = klines.map(k => parseFloat(k[3]));
-                let highs = klines.map(k => parseFloat(k[2]));
-
                 let rsi = calculateRSI(closes);
-                let recentLow = Math.min(...lows.slice(-4));
-                let recentHigh = Math.max(...highs.slice(-4));
 
                 let stopLoss = 0;
                 let takeProfit = 0;
 
+                // Если монета падала — даем сигнал на отскок (LONG), если росла — на шорт
                 if (change < 0) {
-                    stopLoss = recentLow * 0.99;
-                    let risk = price - stopLoss;
-                    takeProfit = price + (risk * 2);
+                    stopLoss = price * 0.985;
+                    takeProfit = price * 1.03;
                     dirElement.className = "text-2xl font-black my-2 text-green-400";
                     dirElement.innerText = "🚀 ТОП LONG (1m)";
                 } else {
-                    stopLoss = recentHigh * 1.01;
-                    let risk = stopLoss - price;
-                    takeProfit = price - (risk * 2);
+                    stopLoss = price * 1.015;
+                    takeProfit = price * 0.97;
                     dirElement.className = "text-2xl font-black my-2 text-red-400";
                     dirElement.innerText = "📉 ТОП SHORT (1m)";
                 }
 
+                let decimals = price < 1 ? 5 : 2;
                 statusElement.innerText = `🔥 1m Найдено: ${coinName} (${change > 0 ? '+' : ''}${change.toFixed(2)}%)`;
-                priceElement.innerText = "$" + (price < 0.01 ? price.toFixed(6) : price.toFixed(3));
+                priceElement.innerText = "$" + price.toFixed(decimals);
                 rsiElement.innerText = rsi.toFixed(1) + " (1m RSI)";
-                stopElement.innerText = "$" + (stopLoss < 0.01 ? stopLoss.toFixed(6) : stopLoss.toFixed(2));
-                takeProfit.innerText = "$" + (takeProfit < 0.01 ? takeProfit.toFixed(6) : takeProfit.toFixed(2));
+                stopElement.innerText = "$" + stopLoss.toFixed(decimals);
+                takeProfit.innerText = "$" + takeProfit.toFixed(decimals);
 
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
 
             } catch (e) {
                 dirElement.className = "text-lg font-bold my-2 text-red-500";
-                dirElement.innerText = "Ошибка 1м сканера";
+                dirElement.innerText = "Ошибка сканера";
             } finally {
                 btn.innerText = "🔥 ИСКАТЬ ТОП-ИМПУЛЬС (1m LIVE)";
                 btn.disabled = false;
