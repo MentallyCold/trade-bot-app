@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEXC Futures Pro Scanner (Strict Trend)</title>
+    <title>MEXC Futures Pro Scanner (Strict 30% PNL)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -14,7 +14,7 @@
         <div class="bg-[#1a1a1e] p-3 rounded-xl mb-4 border border-gray-800 text-xs flex justify-between items-center">
             <div>
                 <span class="font-bold text-emerald-400">⚡ PRO TREND SCANNER</span>
-                <div class="text-gray-500 text-[10px]">EMA Trend + RSI Filter (1m)</div>
+                <div class="text-gray-500 text-[10px]">Target 30% PNL Engine (1m)</div>
             </div>
             <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded font-mono text-[10px]">Live 1m</span>
         </div>
@@ -48,7 +48,7 @@
                     <div id="stat-stop" class="font-bold text-base text-red-400">--</div>
                 </div>
                 <div class="bg-[#131315] p-2.5 rounded-xl border border-gray-800/50">
-                    <div class="text-gray-500 text-xs text-green-400">Тейк-профит</div>
+                    <div class="text-gray-500 text-xs text-green-400">Тейк-профит (~30%)</div>
                     <div id="stat-take" class="font-bold text-base text-green-400">--</div>
                 </div>
             </div>
@@ -108,7 +108,6 @@
             document.getElementById('selected-pair').innerHTML = `<span>${flag} ${name} (Futures)</span><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
         }
 
-        // Расчет RSI
         function calculateRSI(closes, period = 14) {
             if (closes.length < period + 1) return 50;
             let gains = 0, losses = 0;
@@ -135,7 +134,6 @@
             return 100 - (100 / (1 + rs));
         }
 
-        // Расчет простой скользящей средней (SMA / EMA аналог)
         function calculateSMA(data, period) {
             if (data.length < period) return data[data.length - 1];
             let slice = data.slice(-period);
@@ -143,7 +141,7 @@
             return sum / period;
         }
 
-        // Строгий трендовый анализ
+        // Трендовый анализ с жестким микро-тейком под 30% PNL с учетом плеча
         async function analyzeStrictTrend() {
             const btn = document.getElementById('gen-btn');
             const dirElement = document.getElementById('signal-direction');
@@ -156,7 +154,7 @@
             btn.innerText = "Анализ тренда 1м...";
             btn.disabled = true;
             dirElement.className = "text-xl font-bold my-2 text-yellow-400 animate-pulse";
-            dirElement.innerText = "Проверка EMA и RSI...";
+            dirElement.innerText = "Расчет 30% сетапа...";
 
             try {
                 let res = await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${currentSymbol}&interval=1m&limit=50`);
@@ -166,24 +164,22 @@
                 let currentPrice = closes[closes.length - 1];
                 
                 let rsi = calculateRSI(closes);
-                let sma20 = calculateSMA(closes, 20); // Быстрая средняя
+                let sma20 = calculateSMA(closes, 20);
 
                 let stopLoss = 0;
                 let takeProfit = 0;
 
-                // Жесткое правило: торгуем строго по направлению цены относительно SMA20 с подтверждением RSI
+                // Сверх-короткий скальпинг: Тейк ровно 0.3% движения цены (даст ~30% на 100x плече), Стоп 0.2%
                 if (currentPrice > sma20 && rsi > 45) {
-                    // Тренд восходящий -> Только LONG, короткий стоп и реальный тейк (~30-40% движения)
-                    stopLoss = currentPrice * 0.993;  // Стоп -0.7%
-                    takeProfit = currentPrice * 1.010; // Тейк +1.0%
+                    stopLoss = currentPrice * 0.998;  // Стоп -0.2%
+                    takeProfit = currentPrice * 1.003; // Тейк +0.3%
                     dirElement.className = "text-2xl font-black my-2 text-green-400";
-                    dirElement.innerText = "🚀 СИГНАЛ: LONG (Trend)";
+                    dirElement.innerText = "🚀 СИГНАЛ: LONG (30%)";
                 } else {
-                    // Тренд нисходящий или откат -> Только SHORT
-                    stopLoss = currentPrice * 1.007;  // Стоп +0.7%
-                    takeProfit = currentPrice * 0.990; // Тейк -1.0%
+                    stopLoss = currentPrice * 1.002;  // Стоп +0.2%
+                    takeProfit = currentPrice * 0.997; // Тейк -0.3%
                     dirElement.className = "text-2xl font-black my-2 text-red-400";
-                    dirElement.innerText = "📉 СИГНАЛ: SHORT (Trend)";
+                    dirElement.innerText = "📉 СИГНАЛ: SHORT (30%)";
                 }
 
                 let decimals = currentPrice < 1 ? 5 : 2;
@@ -191,7 +187,7 @@
                 rsiElement.innerText = `RSI: ${rsi.toFixed(0)} | EMA ok`;
                 stopElement.innerText = "$" + stopLoss.toFixed(decimals);
                 takeElement.innerText = "$" + takeProfit.toFixed(decimals);
-                statusElement.innerText = `Трендовый анализ завершен | ${currentName}`;
+                statusElement.innerText = `Цель 30% PNL зафиксирована | ${currentName}`;
 
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
 
@@ -204,7 +200,7 @@
             }
         }
 
-        // Сканер импульсов для волатильных монет
+        // Сканер импульсов (оставляем шире для волатильных монет)
         async function scanWildMarket() {
             const btn = document.getElementById('scan-btn');
             const dirElement = document.getElementById('signal-direction');
@@ -259,7 +255,7 @@
                 priceElement.innerText = "$" + price.toFixed(decimals);
                 rsiElement.innerText = rsi.toFixed(0) + " (Impulse)";
                 stopElement.innerText = "$" + stopLoss.toFixed(decimals);
-                takeProfit.innerText = "$" + takeProfit.toFixed(decimals);
+                takeElement.innerText = "$" + takeProfit.toFixed(decimals);
 
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
 
