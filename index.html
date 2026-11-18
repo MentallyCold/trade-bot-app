@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEXC Futures Pro Scanner (Strict 30% PNL)</title>
+    <title>MEXC Futures Pro Scanner (15m)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -14,9 +14,9 @@
         <div class="bg-[#1a1a1e] p-3 rounded-xl mb-4 border border-gray-800 text-xs flex justify-between items-center">
             <div>
                 <span class="font-bold text-emerald-400">⚡ PRO TREND SCANNER</span>
-                <div class="text-gray-500 text-[10px]">Target 30% PNL Engine (1m)</div>
+                <div class="text-gray-500 text-[10px]">EMA Trend + RSI Filter (15m)</div>
             </div>
-            <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded font-mono text-[10px]">Live 1m</span>
+            <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded font-mono text-[10px]">Live 15m</span>
         </div>
 
         <!-- Шапка с выбором монеты -->
@@ -48,7 +48,7 @@
                     <div id="stat-stop" class="font-bold text-base text-red-400">--</div>
                 </div>
                 <div class="bg-[#131315] p-2.5 rounded-xl border border-gray-800/50">
-                    <div class="text-gray-500 text-xs text-green-400">Тейк-профит (~30%)</div>
+                    <div class="text-gray-500 text-xs text-green-400">Тейк-профит (15m)</div>
                     <div id="stat-take" class="font-bold text-base text-green-400">--</div>
                 </div>
             </div>
@@ -56,11 +56,11 @@
             <!-- Кнопки управления -->
             <div class="space-y-2.5">
                 <button id="gen-btn" onclick="analyzeStrictTrend()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95">
-                    🎯 ТОЧНЫЙ ТРЕНДОВЫЙ СИГНАЛ (1m)
+                    🎯 АНАЛИЗ СВЕЧЕЙ (15m RSI)
                 </button>
                 
                 <button id="scan-btn" onclick="scanWildMarket()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition transform active:scale-95 text-sm">
-                    🔥 ИСКАТЬ ТОП-ИМПУЛЬС (1m LIVE)
+                    🔥 ИСКАТЬ ТОП-ИМПУЛЬС (15m LIVE)
                 </button>
             </div>
         </div>
@@ -141,7 +141,7 @@
             return sum / period;
         }
 
-        // Трендовый анализ с жестким микро-тейком под 30% PNL с учетом плеча
+        // Анализ по 15-минутным свечам
         async function analyzeStrictTrend() {
             const btn = document.getElementById('gen-btn');
             const dirElement = document.getElementById('signal-direction');
@@ -151,13 +151,14 @@
             const takeElement = document.getElementById('stat-take');
             const statusElement = document.getElementById('scan-status');
 
-            btn.innerText = "Анализ тренда 1м...";
+            btn.innerText = "Анализ 15м свечей...";
             btn.disabled = true;
             dirElement.className = "text-xl font-bold my-2 text-yellow-400 animate-pulse";
-            dirElement.innerText = "Расчет 30% сетапа...";
+            dirElement.innerText = "Расчет 15m тренда...";
 
             try {
-                let res = await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${currentSymbol}&interval=1m&limit=50`);
+                // Запрос 15-минутного таймфрейма (interval=15m)
+                let res = await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${currentSymbol}&interval=15m&limit=50`);
                 let klines = await res.json();
 
                 let closes = klines.map(k => parseFloat(k[4])); 
@@ -169,25 +170,25 @@
                 let stopLoss = 0;
                 let takeProfit = 0;
 
-                // Сверх-короткий скальпинг: Тейк ровно 0.3% движения цены (даст ~30% на 100x плече), Стоп 0.2%
+                // Для 15м закладываем чуть шире движение (Стоп 0.8%, Тейк 1.2% — около 30-40% движения с учетом плеча)
                 if (currentPrice > sma20 && rsi > 45) {
-                    stopLoss = currentPrice * 0.998;  // Стоп -0.2%
-                    takeProfit = currentPrice * 1.003; // Тейк +0.3%
+                    stopLoss = currentPrice * 0.992;  
+                    takeProfit = currentPrice * 1.012; 
                     dirElement.className = "text-2xl font-black my-2 text-green-400";
-                    dirElement.innerText = "🚀 СИГНАЛ: LONG (30%)";
+                    dirElement.innerText = "🚀 СИГНАЛ: LONG (15m)";
                 } else {
-                    stopLoss = currentPrice * 1.002;  // Стоп +0.2%
-                    takeProfit = currentPrice * 0.997; // Тейк -0.3%
+                    stopLoss = currentPrice * 1.008;  
+                    takeProfit = currentPrice * 0.988; 
                     dirElement.className = "text-2xl font-black my-2 text-red-400";
-                    dirElement.innerText = "📉 СИГНАЛ: SHORT (30%)";
+                    dirElement.innerText = "📉 СИГНАЛ: SHORT (15m)";
                 }
 
                 let decimals = currentPrice < 1 ? 5 : 2;
                 priceElement.innerText = "$" + currentPrice.toFixed(decimals);
-                rsiElement.innerText = `RSI: ${rsi.toFixed(0)} | EMA ok`;
+                rsiElement.innerText = `RSI: ${rsi.toFixed(0)} | 15m EMA`;
                 stopElement.innerText = "$" + stopLoss.toFixed(decimals);
                 takeElement.innerText = "$" + takeProfit.toFixed(decimals);
-                statusElement.innerText = `Цель 30% PNL зафиксирована | ${currentName}`;
+                statusElement.innerText = `15м анализ завершен | ${currentName}`;
 
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
 
@@ -195,12 +196,12 @@
                 dirElement.className = "text-lg font-bold my-2 text-red-500";
                 dirElement.innerText = "Ошибка получения данных";
             } finally {
-                btn.innerText = "🎯 ТОЧНЫЙ ТРЕНДОВЫЙ СИГНАЛ (1m)";
+                btn.innerText = "🎯 АНАЛИЗ СВЕЧЕЙ (15m RSI)";
                 btn.disabled = false;
             }
         }
 
-        // Сканер импульсов (оставляем шире для волатильных монет)
+        // Сканер импульсов (также переведен на 15м)
         async function scanWildMarket() {
             const btn = document.getElementById('scan-btn');
             const dirElement = document.getElementById('signal-direction');
@@ -210,10 +211,10 @@
             const takeElement = document.getElementById('stat-take');
             const statusElement = document.getElementById('scan-status');
 
-            btn.innerText = "Сканирую стаканы...";
+            btn.innerText = "Сканирую 15м стаканы...";
             btn.disabled = true;
             dirElement.className = "text-xl font-bold my-2 text-purple-400 animate-pulse";
-            dirElement.innerText = "Поиск сильного импульса...";
+            dirElement.innerText = "Поиск 15м импульса...";
 
             try {
                 let res = await fetch('https://fapi.binance.com/fapi/v1/ticker/24hr');
@@ -230,7 +231,7 @@
 
                 setScannedPair(coinSymbol, coinName, "🔥");
 
-                let klinesRes = await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${coinSymbol}&interval=1m&limit=30`);
+                let klinesRes = await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${coinSymbol}&interval=15m&limit=30`);
                 let klines = await klinesRes.json();
                 let closes = klines.map(k => parseFloat(k[4]));
                 let rsi = calculateRSI(closes);
@@ -242,20 +243,20 @@
                     stopLoss = price * 0.985;
                     takeProfit = price * 1.03;
                     dirElement.className = "text-2xl font-black my-2 text-green-400";
-                    dirElement.innerText = "🚀 ТОП LONG (1m)";
+                    dirElement.innerText = "🚀 ТОП LONG (15m)";
                 } else {
                     stopLoss = price * 1.015;
                     takeProfit = price * 0.97;
                     dirElement.className = "text-2xl font-black my-2 text-red-400";
-                    dirElement.innerText = "📉 ТОП SHORT (1m)";
+                    dirElement.innerText = "📉 ТОП SHORT (15m)";
                 }
 
                 let decimals = price < 1 ? 5 : 2;
-                statusElement.innerText = `🔥 1m Найдено: ${coinName} (${change > 0 ? '+' : ''}${change.toFixed(2)}%)`;
+                statusElement.innerText = `🔥 15m Найдено: ${coinName} (${change > 0 ? '+' : ''}${change.toFixed(2)}%)`;
                 priceElement.innerText = "$" + price.toFixed(decimals);
-                rsiElement.innerText = rsi.toFixed(0) + " (Impulse)";
+                rsiElement.innerText = rsi.toFixed(0) + " (15m RSI)";
                 stopElement.innerText = "$" + stopLoss.toFixed(decimals);
-                takeElement.innerText = "$" + takeProfit.toFixed(decimals);
+                takeProfit.innerText = "$" + takeProfit.toFixed(decimals);
 
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
 
@@ -263,7 +264,7 @@
                 dirElement.className = "text-lg font-bold my-2 text-red-500";
                 dirElement.innerText = "Ошибка сканера";
             } finally {
-                btn.innerText = "🔥 ИСКАТЬ ТОП-ИМПУЛЬС (1m LIVE)";
+                btn.innerText = "🔥 ИСКАТЬ ТОП-ИМПУЛЬС (15m LIVE)";
                 btn.disabled = false;
             }
         }
